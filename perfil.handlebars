@@ -1,0 +1,15 @@
+<h1>Meu Perfil</h1>
+<p>Nome: {{nome}}</p>
+<p>Idade: {{idade}}</p>
+
+<hr>
+
+{{#if vip}}
+    <p style="color: gold;">Você é um usuário VIP!</p>
+{{else}}
+    <p>Você é um usuário normal.</p>
+{{/if}}
+
+{{#unless bloqueado}}
+    <p>Sua conta está funcionando direitinho.</p>
+{{/unless}}

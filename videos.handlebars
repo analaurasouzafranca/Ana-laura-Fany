@@ -1,0 +1,13 @@
+<h1>TikTok Clone - Vídeos</h1>
+
+{{#each videos}}
+<div class="video-card">
+    <img src="{{this.urlThumbnail}}" alt="{{this.titulo}}">
+    <h3>{{this.titulo}}</h3>
+    <p><strong>Criador:</strong> {{this.nomeCriador}}</p>
+    <p>{{this.descricao}}</p>
+    <p> visualização {{this.visualizacoes}} | curtidas {{this.curtidas}}</p>
+    <p>#{{this.hashtag}}</p>
+    <a href="{{this.urlVideo}}" target="_blank">Assistir Vídeo</a>
+</div>
+{{/each}}
