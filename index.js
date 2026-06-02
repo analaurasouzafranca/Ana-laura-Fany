@@ -15,7 +15,7 @@ app.use(express.urlencoded({ extended: true }));
 var listaVideos = [
     {
         titulo: "Meu primeiro video",
-        nomeCriador: "Joao",
+        nomeCriador: "lala",
         descricao: "Um video legal",
         visualizacoes: 10,
         curtidas: 5,
