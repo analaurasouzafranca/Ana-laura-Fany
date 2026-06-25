@@ -1,155 +1,260 @@
+
 const express = require('express');
-const exphbs = require('express-handlebars');
-const path = require('path');
+const { engine } = require('express-handlebars');
+const { Produto, Usuario, Video } = require('./models');
+const sequelize = require('./db');
 
 const app = express();
 
-// Configuração Handlebars
-app.engine('handlebars', exphbs.engine());
+// Configuração do Handlebars
+app.engine('handlebars', engine());
 app.set('view engine', 'handlebars');
+app.set('views', './views');
 
-// Para conseguir ler os dados que vêm do formulário 
 app.use(express.urlencoded({ extended: true }));
 
-// "Banco de dados" de mentirinha para os vídeos
-var listaVideos = [
-    {
-        titulo: "Meu primeiro video",
-        nomeCriador: "lala",
-        descricao: "Um video legal",
-        visualizacoes: 10,
-        curtidas: 5,
-        hashtag: "dev",
-        urlVideo: "http://video.com",
-        urlThumbnail: "https://picsum.photos/200"
-    }
-];
-
-// --- EXERCÍCIOS DE ROTAS ---
-
-// Questão 1 e 12
-app.get('/', function(req, res) {
-    res.render('home');
+// Rota Principal - Listar Vídeos (findAll)
+app.get('/', async (req, res) => {
+  try {
+    const videos = await Video.findAll({ raw: true });
+    res.render('home', { videos });
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-// Questão 2
-app.get('/sobre', function(req, res) {
-    res.send('Esta aplicação foi feita para aprender Express!');
-});
-
-// Questão 3
-app.get('/contato', function(req, res) {
-    var dadosContato = {
-        email: "contato@email.com",
-        telefone: "(81) 99999-9999"
-    };
-    res.json(dadosContato);
-});
-
-// Questão 4
-app.get('/erro', function(req, res) {
-    res.status(404).send('Página não encontrada');
-});
-
-// Questão 5
-app.get('/inicio', function(req, res) {
+// Cadastrar Vídeo (create)
+app.post('/videos/novo', async (req, res) => {
+  try {
+    const { titulo, descricao, url } = req.body;
+    await Video.create({ titulo, descricao, url });
     res.redirect('/');
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-// --- EXERCÍCIOS DE PARÂMETROS ---
-
-// Questão 6
-app.get('/usuarios/:id', function(req, res) {
-    var id = req.params.id;
-    res.send('Usuário ' + id);
+// Deletar Vídeo (destroy)
+app.post('/videos/deletar', async (req, res) => {
+  try {
+    const { id } = req.body;
+    await Video.destroy({ where: { id } });
+    res.redirect('/');
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-// Questão 7
-app.get('/produtos/:nome', function(req, res) {
-    var nome = req.params.nome;
-    res.send('Produto: ' + nome);
-});
+// Exercício 4: Criar 3 produtos e listar todos
+app.get('/exercicio4', async (req, res) => {
+  try {
+    await Produto.create({ nome: 'Teclado', preco: 150.0 });
+    await Produto.create({ nome: 'Mouse', preco: 80.0 });
+    await Produto.create({ nome: 'Monitor', preco: 900.0 });
 
-// Questão 8
-app.get('/filmes/:id/:nome', function(req, res) {
-    var id = req.params.id;
-    var nome = req.params.nome;
-    res.send('ID do filme: ' + id + ' | Nome do filme: ' + nome);
-});
-
-// --- EXERCÍCIOS DE QUERY STRING ---
-
-// Questão 9
-app.get('/buscar', function(req, res) {
-    var nomeBusca = req.query.nome;
-    res.send('Buscando por: ' + nomeBusca);
-});
-
-// Questão 10
-app.get('/produtos', function(req, res) {
-    var cat = req.query.categoria;
-    var pag = req.query.pagina;
-    res.send('Categoria: ' + cat + ' | Página: ' + pag);
-});
-
-// Questão 11
-app.get('/usuarios-filtro', function(req, res) {
-    var idade = req.query.idade;
-    res.send('Filtrando usuários com idade ' + idade);
-});
-
-// --- EXERCÍCIOS DE HANDLEBARS ---
-
-// Questão 13 e 15
-app.get('/perfil', function(req, res) {
-    var usuario = {
-        nome: "Carlos Silva",
-        idade: 20,
-        vip: true,
-        bloqueado: false
-    };
-    res.render('perfil', usuario);
-});
-
-// Questão 14 e 16
-app.get('/filmes-lista', function(req, res) {
-    var filmes = [
-        { nome: "Vingadores", ano: 2012 },
-        { nome: "Batman", ano: 2022 },
-        { nome: "Spider-man", ano: 2021 }
-    ];
-    res.render('filmes', { lista: filmes });
-});
-
-// --- TIKTOK CLONE (Questão 17) ---
-
-// Página que mostra os vídeos
-app.get('/videos', function(req, res) {
-    res.render('videos', { videos: listaVideos });
-});
-
-// Página do formulário
-app.get('/videos/cadastrar', function(req, res) {
-    res.render('cadastrar');
-});
-
-// Rota que recebe os dados do formulário e salva
-app.post('/videos', function(req, res) {
-    var novo = {
-        titulo: req.body.titulo,
-        nomeCriador: req.body.nomeCriador,
-        descricao: req.body.descricao,
-        visualizacoes: req.body.visualizacoes,
-        curtidas: req.body.curtidas,
-        hashtag: req.body.hashtag,
-        urlVideo: req.body.urlVideo,
-        urlThumbnail: req.body.urlThumbnail
-    };
+    const produtos = await Produto.findAll();
+    console.log('--- Exercício 4: Todos os Produtos ---');
+    console.log(JSON.stringify(produtos, null, 2));
     
-    listaVideos.push(novo);
-    res.redirect('/videos');
+    res.send('Exercício 4: Produtos criados e listados no terminal.');
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
 });
 
-app.listen(3000, function() {
-    console.log('Servidor funcionando na porta 3000');
+// Exercício 5: Buscar produto por ID (findByPk)
+app.get('/exercicio5', async (req, res) => {
+  try {
+    const produto = await Produto.findByPk(1);
+    if (produto) {
+      console.log('--- Exercício 5: Produto por ID ---');
+      console.log(`Nome: ${produto.nome}, Preço: ${produto.preco}`);
+      res.send(`Exercício 5: Produto encontrado - ${produto.nome}`);
+    } else {
+      res.send('Exercício 5: Produto não encontrado.');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+// Exercício 6: Atualizar preço usando save()
+app.get('/exercicio6', async (req, res) => {
+  try {
+    const produto = await Produto.findByPk(1);
+    if (produto) {
+      produto.preco = 199.99;
+      await produto.save();
+      console.log('--- Exercício 6: Produto Atualizado ---');
+      console.log(`Novo preço do ${produto.nome}: ${produto.preco}`);
+      res.send('Exercício 6: Preço atualizado com sucesso.');
+    } else {
+      res.send('Exercício 6: Produto não encontrado para atualizar.');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+// Exercício 7: Deletar produto usando destroy()
+app.get('/exercicio7', async (req, res) => {
+  try {
+    const produto = await Produto.findByPk(2);
+    if (produto) {
+      await produto.destroy();
+      console.log('--- Exercício 7: Produto Deletado ---');
+      const produtosRestantes = await Produto.findAll();
+      console.log('Produtos restantes:');
+      console.log(JSON.stringify(produtosRestantes, null, 2));
+      res.send('Exercício 7: Produto deletado e lista atualizada no terminal.');
+    } else {
+      res.send('Exercício 7: Produto não encontrado para deletar.');
+    }
+  } catch (error) {
+    res.status(500).send(error.message);
+  }
+});
+
+/*Exercício 8
+Crie uma rota GET /produtos que busque todos os produtos no banco e retorne um JSON com os resultados.*/
+
+app.get('/produtos', async (req, res) => {
+    try {
+        const produtos = await Produto.findAll();
+
+        res.json(produtos);
+    } catch (erro) {
+        res.status(500).json({ erro: erro.message });
+    }
+});
+
+
+
+/*Exercício 9
+Crie uma rota POST /produtos que receba nome e preco pelo req.body e salve no banco usando create().*/
+app.post('/produtos', async (req, res) => {
+    try {
+        const { nome, preco } = req.body;
+
+        await Produto.create({
+            nome,
+            preco
+        });
+
+        res.json({
+            mensagem: 'Produto cadastrado com sucesso!'
+        });
+
+    } catch (erro) {
+        res.status(500).json({ erro: erro.message });
+    }
+});
+
+
+
+
+
+
+
+/*Exercício 10
+Crie uma rota que receba um id como parâmetro de rota e delete o registro correspondente no banco.*/
+
+app.get('/produtos/deletar/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        await Produto.destroy({
+            where: {
+                id
+            }
+        });
+
+        res.json({
+            mensagem: 'Produto removido com sucesso!'
+        });
+
+    } catch (erro) {
+        res.status(500).json({ erro: erro.message });
+    }
+});
+
+
+
+
+/*Exercício 11
+Crie uma rota GET /usuarios que busque todos os usuários no banco e renderize uma view usuarios.handlebars com a lista usando ``.*/
+
+app.get('/usuarios', async (req, res) => {
+    try {
+        const usuarios = await Usuario.findAll({
+            raw: true
+        });
+
+        res.render('usuarios', {
+            usuarios
+        });
+
+    } catch (erro) {
+        res.send(erro);
+    }
+});
+
+
+
+/*Exercício 12
+Crie um formulário em cadastrarUsuario.handlebars com campos para nome, email e idade.
+
+A rota POST deve salvar o usuário no banco e redirecionar para /usuarios.*/
+
+app.get('/cadastrarUsuario', (req, res) => {
+    res.render('cadastrarUsuario');
+});
+
+app.post('/cadastrarUsuario', async (req, res) => {
+    try {
+        const { nome, email, idade } = req.body;
+
+        await Usuario.create({
+            nome,
+            email,
+            idade
+        });
+
+        res.redirect('/usuarios');
+
+    } catch (erro) {
+        res.send(erro);
+    }
+});
+
+
+
+
+/*Exercício 13
+Adicione um botão de remoção na listagem de usuários.
+
+Ao clicar, o usuário deve ser removido do banco e a página deve ser redirecionada para /usuarios.*/
+
+
+app.get('/usuarios/remover/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        await Usuario.destroy({
+            where: {
+                id
+            }
+        });
+
+        res.redirect('/usuarios');
+
+    } catch (erro) {
+        res.send(erro);
+    }
+});
+
+
+const PORT = 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando em http://localhost:${PORT}`);
 });
